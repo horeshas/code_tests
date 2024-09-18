@@ -96,7 +96,6 @@
     <div class="cover-page" id="coverPage">
         <canvas id="coverCanvas" width="1500" height="600"></canvas>
         <div class="button-container">
-            <button onclick="downloadImage()">Download Image</button>
             <button onclick="resetPage()">Create Another Cover</button>
         </div>
     </div>
@@ -191,21 +190,7 @@
             document.getElementById('coverPage').style.display = 'flex';
         }
 
-        function downloadImage() {
-            var canvas = document.getElementById('coverCanvas');
-            var link = document.createElement('a');
-            var text = document.getElementById('coverText').value.trim();
-
-            // Replace spaces and special characters in filename
-            var filename = text.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') + '_notion_cover.jpg';
-            if (filename === '_notion_cover.jpg') {
-                filename = 'notion_cover.jpg';
-            }
-
-            link.download = filename;
-            link.href = canvas.toDataURL('image/jpeg', 1.0);
-            link.click();
-        }
+        
 
         function resetPage() {
             // Clear canvas
