@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+
+    <title>Notion Cover Page Generator</title>
+    <style>
+        /* Reset default margins and paddings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Full-height container */
+        html, body {
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Centered input form */
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .input-container input, .input-container button, .input-container label, .input-container select {
+            margin: 10px;
+            padding: 10px;
+            font-size: 18px;
+        }
+
+        /* Cover page styling */
+        .cover-page {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        /* Canvas styling */
+        #coverCanvas {
+            border: 1px solid #ccc;
+        }
+
+        .button-container {
+            margin-top: 20px;
+        }
+
+        .button-container button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+
+
+    <!-- Input Form -->
+    <div class="input-container">
+        <input type="text" id="coverText" placeholder="Enter your text here">
+
+        <label for="bgColor">Choose Background Color:</label>
+        <select id="bgColor">
+            <option value="white">White</option>
+            <option value="red">Red</option>
+            <option value="orange">Orange</option>
+            <option value="yellow">Yellow</option>
+            <option value="green">Green</option>
+            <option value="blue" selected>Blue</option>
+            <option value="indigo">Indigo</option>
+            <option value="violet">Violet</option>
+            <option value="black">Black</option>
+        </select>
+
+        <label for="textColor">Choose Text Color:</label>
+        <select id="textColor">
+            <option value="black">Black</option>
+            <option value="red">Red</option>
+            <option value="orange">Orange</option>
+            <option value="yellow">Yellow</option>
+            <option value="green">Green</option>
+            <option value="blue">Blue</option>
+            <option value="indigo">Indigo</option>
+            <option value="violet">Violet</option>
+            <option value="white" selected>White</option>
+        </select>
+
+        <button onclick="generateCover()">Generate Cover Page</button>
+    </div>
+
+    <!-- Cover Page -->
+    <div class="cover-page" id="coverPage">
+        <canvas id="coverCanvas" width="1500" height="600"></canvas>
+        <div class="button-container">
+            <button onclick="downloadImage()">Download Image</button>
+            <button onclick="resetPage()">Create Another Cover</button>
+        </div>
+    </div>
+
+    <script>
+        function generateCover() {
+            // Get user inputs
+            var text = document.getElementById('coverText').value.trim();
+            var bgColor = document.getElementById('bgColor').value;
+            var textColor = document.getElementById('textColor').value;
+
+            if (text === '') {
+                alert('Please enter some text.');
+                return;
+            }
+
+            // Get canvas and context
+            var canvas = document.getElementById('coverCanvas');
+            var ctx = canvas.getContext('2d');
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Set text properties
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Determine font size based on text length
+            var fontSize = 100;
+            ctx.font = fontSize + 'px Arial';
+
+            // Reduce font size if text is too wide
+            while (ctx.measureText(text).width > canvas.width * 0.9 && fontSize > 20) {
+                fontSize -= 5;
+                ctx.font = fontSize + 'px Arial';
+            }
+
+            // Wrap text if necessary
+            var lines = [];
+            var line = '';
+            var words = text.split(' ');
+
+            for (var i = 0; i < words.length; i++) {
+                var testLine = line + words[i] + ' ';
+                var metrics = ctx.measureText(testLine);
+                if (metrics.width > canvas.width * 0.8 && i > 0) {
+                    lines.push(line);
+                    line = words[i] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+
+            // Adjust font size if text is too tall
+            while (lines.length * fontSize * 1.2 > canvas.height * 0.9 && fontSize > 20) {
+                fontSize -= 5;
+                ctx.font = fontSize + 'px Arial';
+            }
+
+            // Recalculate lines with new font size
+            lines = [];
+            line = '';
+            ctx.font = fontSize + 'px Arial';
+            for (var i = 0; i < words.length; i++) {
+                var testLine = line + words[i] + ' ';
+                var metrics = ctx.measureText(testLine);
+                if (metrics.width > canvas.width * 0.8 && i > 0) {
+                    lines.push(line);
+                    line = words[i] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+
+            // Draw text
+            var lineHeight = fontSize * 1.2;
+            var y = (canvas.height - (lines.length * lineHeight)) / 2 + lineHeight / 2;
+
+            for (var i = 0; i < lines.length; i++) {
+                ctx.fillText(lines[i].trim(), canvas.width / 2, y + (i * lineHeight));
+            }
+
+            // Show the cover page and hide the input form
+            document.querySelector('.input-container').style.display = 'none';
+            document.getElementById('coverPage').style.display = 'flex';
+        }
+
+        function downloadImage() {
+            var canvas = document.getElementById('coverCanvas');
+            var link = document.createElement('a');
+            var text = document.getElementById('coverText').value.trim();
+
+            // Replace spaces and special characters in filename
+            var filename = text.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') + '_notion_cover.jpg';
+            if (filename === '_notion_cover.jpg') {
+                filename = 'notion_cover.jpg';
+            }
+
+            link.download = filename;
+            link.href = canvas.toDataURL('image/jpeg', 1.0);
+            link.click();
+        }
+
+        function resetPage() {
+            // Clear canvas
+            var canvas = document.getElementById('coverCanvas');
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Reset input form
+            document.getElementById('coverText').value = '';
+            document.getElementById('bgColor').value = 'blue';
+            document.getElementById('textColor').value = 'white';
+
+            // Show the input form and hide the cover page
+            document.querySelector('.input-container').style.display = 'flex';
+            document.getElementById('coverPage').style.display = 'none';
+        }
+    </script>
+</html>
